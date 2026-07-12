@@ -311,3 +311,63 @@
     color:var(--text-secondary);
 
 }
+/*==========================
+      TECHNOLOGY STACK
+===========================*/
+
+.tech-stack{
+
+    padding:120px 0;
+
+}
+
+.tech-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+
+    gap:30px;
+
+}
+
+.tech-card{
+
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    padding:35px;
+    text-align:center;
+
+    transition:.35s;
+
+}
+
+.tech-card:hover{
+
+    transform:translateY(-10px);
+    border-color:var(--gold);
+
+    box-shadow:0 0 25px rgba(124,58,237,.25);
+
+}
+
+.tech-icon{
+
+    font-size:48px;
+    margin-bottom:20px;
+
+}
+
+.tech-card h3{
+
+    margin-bottom:15px;
+    color:var(--gold);
+
+}
+
+.tech-card p{
+
+    color:var(--text-secondary);
+
+}
