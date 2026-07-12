@@ -1,0 +1,6 @@
+.dashboard-content{
+    margin-left:260px;
+    margin-top:80px;
+    padding:40px;
+    min-height:calc(100vh - 80px);
+}
