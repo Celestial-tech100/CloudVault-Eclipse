@@ -1,0 +1,76 @@
+/* ===========================================
+   CloudVault Eclipse Design System
+   Variables
+=========================================== */
+
+:root {
+
+    /* ===== COLORS ===== */
+
+    --bg-primary: #09090F;
+    --bg-secondary: #11111C;
+    --bg-card: #181825;
+    --bg-card-hover: #1F2033;
+
+    --primary: #8B5CF6;
+    --primary-hover: #A855F7;
+
+    --secondary: #6D28D9;
+
+    --gold: #F4C542;
+
+    --white: #F8FAFC;
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #B8B8C8;
+    --text-muted: #8D8DAA;
+
+    --border-color: rgba(255,255,255,0.08);
+
+    --success: #22C55E;
+    --danger: #EF4444;
+    --warning: #FACC15;
+    --info: #38BDF8;
+
+
+    /* ===== SHADOWS ===== */
+
+    --shadow-sm: 0 5px 12px rgba(0,0,0,0.15);
+
+    --shadow-md: 0 10px 25px rgba(0,0,0,0.25);
+
+    --shadow-lg: 0 15px 35px rgba(0,0,0,0.35);
+
+    --purple-glow: 0 0 20px rgba(139,92,246,.35);
+
+    --gold-glow: 0 0 18px rgba(244,197,66,.25);
+
+
+    /* ===== BORDER RADIUS ===== */
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-xl: 30px;
+
+
+    /* ===== SPACING ===== */
+
+    --space-xs: .4rem;
+    --space-sm: .75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 4rem;
+
+
+    /* ===== TRANSITIONS ===== */
+
+    --transition: .3s ease;
+
+
+    /* ===== CONTAINER ===== */
+
+    --container-width: 1280px;
+
+}

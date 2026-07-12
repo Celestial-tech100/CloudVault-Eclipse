@@ -1,0 +1,59 @@
+.container{
+
+    width:90%;
+
+    max-width:var(--container-width);
+
+    margin:auto;
+
+}
+
+.section{
+
+    padding:100px 0;
+
+}
+
+.flex{
+
+    display:flex;
+
+}
+
+.grid{
+
+    display:grid;
+}
+
+.text-center{
+    text-align:center;
+}
+
+.mt-1{
+    margin-top:1rem;
+}
+
+.mt-2{
+    margin-top:2rem;
+}
+
+.mt-3{
+    margin-top:3rem;
+}
+/* ==========================
+        FOOTER
+========================== */
+
+.footer{
+
+    padding:30px 0;
+
+    text-align:center;
+
+    border-top:1px solid rgba(255,255,255,.08);
+
+    color:var(--text-muted);
+
+    margin-top:80px;
+
+}

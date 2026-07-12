@@ -1,0 +1,72 @@
+{% extends "base.html" %} {% block title %} CloudVault Eclipse {% endblock %} {%
+block content %}
+
+<section class="hero">
+  <div class="container hero-container">
+    <div class="hero-content">
+      <span class="hero-tag"> Secure • Scalable • Cloud Native </span>
+
+      <h1>
+        Secure Cloud Storage
+
+        <span>Reimagined</span>
+      </h1>
+
+      <p>
+        CloudVault Eclipse is a cloud-native document management platform that
+        enables secure storage, seamless access, and modern deployment using
+        AWS, Docker, Kubernetes and CI/CD.
+      </p>
+
+      <div class="hero-buttons">
+        <a href="/register" class="btn btn-primary"> Get Started </a>
+
+        <a href="/login" class="btn btn-outline"> Login </a>
+      </div>
+
+      <div class="tech-stack">
+        <span>AWS</span>
+
+        <span>Docker</span>
+
+        <span>Kubernetes</span>
+
+        <span>GitHub Actions</span>
+      </div>
+    </div>
+
+    <div class="hero-image">
+      <div class="dashboard-preview">
+        <h3>CloudVault Dashboard</h3>
+
+        <div class="storage-box">
+          <p>Storage Used</p>
+
+          <div class="progress-bar">
+            <div class="progress-fill"></div>
+          </div>
+
+          <span>62%</span>
+        </div>
+
+        <div class="preview-files">
+          <p>📄 Resume.pdf</p>
+
+          <p>📄 CloudReport.docx</p>
+
+          <p>📷 Architecture.png</p>
+        </div>
+
+        <div class="status">
+          <span>☁ AWS Connected</span>
+
+          <span>🐳 Docker Ready</span>
+
+          <span>☸ Kubernetes Active</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
