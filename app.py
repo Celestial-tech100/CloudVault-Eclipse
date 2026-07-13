@@ -113,6 +113,60 @@ def dashboard():
         recent_documents=recent_documents
     )
 
+@app.route("/admin")
+def admin():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        flash("Access denied.")
+        return redirect("/dashboard")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM documents")
+    total_documents = cursor.fetchone()[0]
+
+    cursor.execute("SELECT SUM(file_size) FROM documents")
+    storage = cursor.fetchone()[0] or 0
+
+    if storage < 1024 * 1024:
+        storage_used = f"{round(storage/1024,2)} KB"
+    else:
+        storage_used = f"{round(storage/(1024*1024),2)} MB"
+
+    cursor.execute("""
+        SELECT COUNT(*)
+        FROM documents
+        WHERE DATE(upload_date)=DATE('now')
+    """)
+
+    today_uploads = cursor.fetchone()[0]
+
+    cursor.execute("""
+        SELECT id, full_name, email, role
+        FROM users
+        ORDER BY created_at DESC
+    """)
+
+    users = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "admin.html",
+        total_users=total_users,
+        total_documents=total_documents,
+        storage_used=storage_used,
+        today_uploads=today_uploads,
+        users=users
+    )
+    
 import os
 from werkzeug.utils import secure_filename
 
@@ -196,7 +250,11 @@ def login():
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT id,full_name,password FROM users WHERE email=?",
+            """
+            SELECT id, full_name, password, role
+            FROM users
+            WHERE email=?
+            """,
             (email,)
         )
 
@@ -207,6 +265,7 @@ def login():
 
             session["user_id"] = user[0]
             session["user_name"] = user[1]
+            session["role"] = user[3]
 
             return redirect("/dashboard")
 
