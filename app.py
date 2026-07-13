@@ -1,15 +1,27 @@
+import os
+import sqlite3
+import random
+from datetime import datetime, timedelta
+
 from flask import Flask, render_template
 from flask import session, redirect, request, flash
-from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
-from werkzeug.utils import secure_filename
 from flask import send_from_directory
+from flask_mail import Mail, Message
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-import os
-print("Current Working Directory:", os.getcwd())
-print("Database Path:", os.path.abspath("database/cloudvault.db"))
 app.secret_key = "cloudvault_eclipse_2026"
+
+app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
+app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT"))
+app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS") == "True"
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+
+mail = Mail(app)
 
 
 def init_db():
@@ -286,14 +298,61 @@ def register():
         cursor = conn.cursor()
 
         cursor.execute(
-            "INSERT INTO users(full_name,email,password) VALUES(?,?,?)",
-            (full_name, email, password)
+            "SELECT id FROM users WHERE email=?",
+            (email,)
         )
 
-        conn.commit()
+        existing_user = cursor.fetchone()
         conn.close()
 
-        return redirect("/login")
+        if existing_user:
+            flash("Email already registered. Please login.", "error")
+            return redirect("/register")
+
+        otp = str(random.randint(100000, 999999))
+
+        session["pending_registration"] = {
+            "full_name": full_name,
+            "email": email,
+            "password": password,
+            "otp": otp,
+            "expires_at": (
+                datetime.now() + timedelta(minutes=5)
+            ).strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        try:
+            msg = Message(
+                subject="CloudVault Eclipse - Email Verification",
+                sender=app.config["MAIL_USERNAME"],
+                recipients=[email]
+            )
+
+            msg.body = f"""
+            Hello {full_name},
+
+            Welcome to CloudVault Eclipse!
+
+            Your verification code is:
+
+            {otp}
+
+            This code is valid for 5 minutes.
+
+            If you did not create this account, please ignore this email.
+
+            Regards,
+            CloudVault Eclipse
+            """
+
+            mail.send(msg)
+
+            flash("Verification code sent to your email.", "success")
+            return redirect("/verify-otp")
+
+        except Exception as e:
+            flash(f"Unable to send email: {e}", "error")
+            return redirect("/register")
 
     return render_template("register.html")
 
@@ -301,6 +360,30 @@ def register():
 def logout():
     session.clear()
     return redirect("/")
+
+@app.route("/profile")
+def profile():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT full_name, email, role, created_at
+        FROM users
+        WHERE id=?
+    """, (session["user_id"],))
+
+    user = cursor.fetchone()
+
+    conn.close()
+
+    return render_template(
+        "profile.html",
+        user=user
+    )
 
 @app.route("/documents")
 def documents():
@@ -406,6 +489,112 @@ def delete_document(id):
 
     return redirect("/documents")
 
+from datetime import datetime
+
+@app.route("/verify-otp", methods=["GET", "POST"])
+def verify_otp():
+
+    if "pending_registration" not in session:
+        flash("Registration session expired.", "error")
+        return redirect("/register")
+
+    pending = session["pending_registration"]
+
+    if request.method == "POST":
+
+        entered_otp = request.form["otp"]
+
+        expiry = datetime.strptime(
+            pending["expires_at"],
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        if datetime.now() > expiry:
+            session.pop("pending_registration", None)
+            flash("OTP has expired. Please register again.", "error")
+            return redirect("/register")
+
+        if entered_otp != pending["otp"]:
+            flash("Invalid OTP. Please try again.", "error")
+            return redirect("/verify-otp")
+
+        conn = sqlite3.connect("database/cloudvault.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            INSERT INTO users(full_name,email,password)
+            VALUES(?,?,?)
+            """,
+            (
+                pending["full_name"],
+                pending["email"],
+                pending["password"]
+            )
+        )
+
+        conn.commit()
+        conn.close()
+
+        session.pop("pending_registration", None)
+
+        flash(
+            "Email verified successfully. Please login.",
+            "success"
+        )
+
+        return redirect("/login")
+
+    return render_template("verify_otp.html")
+
+@app.route("/resend-otp")
+def resend_otp():
+
+    if "pending_registration" not in session:
+        flash("Registration session expired.", "error")
+        return redirect("/register")
+
+    pending = session["pending_registration"]
+
+    otp = str(random.randint(100000, 999999))
+
+    pending["otp"] = otp
+    pending["expires_at"] = (
+        datetime.now() + timedelta(minutes=5)
+    ).strftime("%Y-%m-%d %H:%M:%S")
+
+    session["pending_registration"] = pending
+
+    try:
+
+        msg = Message(
+            subject="CloudVault Eclipse - Verification Code",
+            sender=app.config["MAIL_USERNAME"],
+            recipients=[pending["email"]]
+        )
+
+        msg.body = f"""
+Hello {pending['full_name']},
+
+Your new verification code is:
+
+{otp}
+
+This code will expire in 5 minutes.
+
+Regards,
+CloudVault Eclipse
+"""
+
+        mail.send(msg)
+
+        flash("A new OTP has been sent to your email.", "success")
+
+    except Exception as e:
+
+        flash(f"Unable to resend OTP: {e}", "error")
+
+    return redirect("/verify-otp")
 
 if __name__ == "__main__":
     app.run(debug=True) 

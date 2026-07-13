@@ -1,0 +1,39 @@
+{% extends "base.html" %} {% block title %}My Profile{% endblock %} {% block
+content %}
+
+<section class="dashboard-page">
+  <div class="page-header">
+    <h2>My Profile</h2>
+    <p>Manage your CloudVault Eclipse account.</p>
+  </div>
+
+  <div class="dashboard-card" style="max-width: 650px">
+    <table class="profile-table">
+      <tr>
+        <th>Full Name</th>
+        <td>{{ user[0] }}</td>
+      </tr>
+
+      <tr>
+        <th>Email</th>
+        <td>{{ user[1] }}</td>
+      </tr>
+
+      <tr>
+        <th>Role</th>
+        <td>{{ user[2]|capitalize }}</td>
+      </tr>
+
+      <tr>
+        <th>Member Since</th>
+        <td>{{ user[3] }}</td>
+      </tr>
+    </table>
+
+    <br />
+
+    <a href="/change-password" class="btn-primary"> Change Password </a>
+  </div>
+</section>
+
+{% endblock %}
