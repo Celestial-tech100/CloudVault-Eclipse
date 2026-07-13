@@ -31,7 +31,87 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/login")
 
-    return render_template("dashboard.html")
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    # Total Documents
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM documents
+        WHERE user_id=?
+        """,
+        (session["user_id"],)
+    )
+    total_documents = cursor.fetchone()[0]
+
+    # Total Categories
+    cursor.execute(
+        """
+        SELECT COUNT(DISTINCT category)
+        FROM documents
+        WHERE user_id=?
+        """,
+        (session["user_id"],)
+    )
+    total_categories = cursor.fetchone()[0]
+
+    # Total Storage Used
+    cursor.execute(
+        """
+        SELECT SUM(file_size)
+        FROM documents
+        WHERE user_id=?
+        """,
+        (session["user_id"],)
+    )
+
+    total_storage = cursor.fetchone()[0]
+
+    if total_storage is None:
+        storage_used = "0 KB"
+    elif total_storage < 1024 * 1024:
+        storage_used = f"{round(total_storage / 1024, 2)} KB"
+    else:
+        storage_used = f"{round(total_storage / (1024 * 1024), 2)} MB"
+
+    # Today's Uploads
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM documents
+        WHERE user_id=?
+        AND DATE(upload_date)=DATE('now')
+        """,
+        (session["user_id"],)
+    )
+
+    today_uploads = cursor.fetchone()[0]
+
+    # Recent Uploads
+    cursor.execute(
+        """
+        SELECT *
+        FROM documents
+        WHERE user_id=?
+        ORDER BY upload_date DESC
+        LIMIT 5
+        """,
+        (session["user_id"],)
+    )
+
+    recent_documents = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        total_documents=total_documents,
+        total_categories=total_categories,
+        storage_used=storage_used,
+        today_uploads=today_uploads,
+        recent_documents=recent_documents
+    )
 
 import os
 from werkzeug.utils import secure_filename
@@ -266,4 +346,4 @@ def delete_document(id):
     return redirect("/documents")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True) 

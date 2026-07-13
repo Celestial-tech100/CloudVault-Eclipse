@@ -1,8 +1,69 @@
-{% extends "dashboard_base.html" %} {% block title %} Dashboard {% endblock %}
-{% block dashboard_content %}
+{% extends "dashboard_base.html" %} {% block title %}Dashboard{% endblock %} {%
+block dashboard_content %}
 
-<h1>Dashboard</h1>
+<div class="dashboard-header">
+  <h1>Welcome, {{ session['user_name'] }} 👋</h1>
+  <p>Manage your documents securely with CloudVault Eclipse.</p>
+</div>
 
-<p>Welcome to CloudVault Eclipse.</p>
+<div class="stats-grid">
+  <div class="stat-card">
+    <h3>📄 Total Documents</h3>
+    <h2>{{ total_documents }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <h3>📂 Categories</h3>
+    <h2>{{ total_categories }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <h3>💾 Storage Used</h3>
+    <h2>{{ storage_used }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <h3>📅 Today's Uploads</h3>
+    <h2>{{ today_uploads }}</h2>
+  </div>
+</div>
+
+<div class="recent-card">
+  <h2>Recent Uploads</h2>
+
+  {% if recent_documents %}
+
+  <table class="documents-table">
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Category</th>
+        <th>Uploaded</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for doc in recent_documents %}
+
+      <tr>
+        <td>{{ doc[2] }}</td>
+        <td>{{ doc[6] }}</td>
+        <td>{{ doc[7] }}</td>
+      </tr>
+
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% else %}
+
+  <div class="empty-state">
+    <h3>No documents uploaded yet.</h3>
+
+    <a href="/upload" class="btn-primary"> Upload Your First Document </a>
+  </div>
+
+  {% endif %}
+</div>
 
 {% endblock %}
