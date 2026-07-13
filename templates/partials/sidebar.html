@@ -5,17 +5,36 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a href="/dashboard">📊 Dashboard</a>
-    <a href="/documents">📄 Documents</a>
-    <a href="/upload">📤 Upload</a>
-    <a href="/profile">👤 Profile</a>
+    <a href="/dashboard" class="sidebar-nav-link">
+      <span>🏠</span>
+      <span>Dashboard</span>
+    </a>
+
+    <a href="/documents" class="sidebar-nav-link">
+      <span>📄</span>
+      <span>Documents</span>
+    </a>
+
+    <a href="/upload" class="sidebar-nav-link">
+      <span>⬆️</span>
+      <span>Upload</span>
+    </a>
+
+    <a href="/profile" class="sidebar-nav-link">
+      <span>👤</span>
+      <span>Profile</span>
+    </a>
+
     {% if session.get("role") == "admin" %}
     <a href="/admin" class="sidebar-nav-link">
       <span>🛡️</span>
       <span>Admin</span>
     </a>
     {% endif %}
-    <a href="/contact">✉ Contact</a>
+    <a href="/contact" class="sidebar-nav-link">
+      <span>✉</span>
+      <span>Contact</span>
+    </a>
   </nav>
 
   <a href="/logout" class="logout-btn"> 🚪 Logout </a>

@@ -2,11 +2,13 @@ from flask import Flask, render_template
 from flask import session, redirect, request, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
-import os
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
 
 app = Flask(__name__)
+import os
+print("Current Working Directory:", os.getcwd())
+print("Database Path:", os.path.abspath("database/cloudvault.db"))
 app.secret_key = "cloudvault_eclipse_2026"
 
 
@@ -18,7 +20,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-init_db()
+# init_db()
 
 
 @app.route("/")
@@ -403,6 +405,7 @@ def delete_document(id):
     conn.close()
 
     return redirect("/documents")
+
 
 if __name__ == "__main__":
     app.run(debug=True) 

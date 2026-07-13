@@ -1,0 +1,59 @@
+{% extends "dashboard_base.html" %} {% block title %}Admin Dashboard{% endblock
+%} {% block dashboard_content %}
+
+<div class="dashboard-header">
+  <h1>🛡️ Admin Dashboard</h1>
+  <p>Manage users and monitor CloudVault Eclipse.</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <h3>Total Users</h3>
+    <h2>{{ total_users }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <h3>Total Documents</h3>
+    <h2>{{ total_documents }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <h3>Storage Used</h3>
+    <h2>{{ storage_used }}</h2>
+  </div>
+
+  <div class="stat-card">
+    <h3>Today's Uploads</h3>
+    <h2>{{ today_uploads }}</h2>
+  </div>
+</div>
+
+<div class="recent-card">
+  <h2>Registered Users</h2>
+
+  <table class="documents-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for user in users %}
+
+      <tr>
+        <td>{{ user[1] }}</td>
+
+        <td>{{ user[2] }}</td>
+
+        <td>{{ user[3] }}</td>
+      </tr>
+
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
