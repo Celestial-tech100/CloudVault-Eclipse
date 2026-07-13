@@ -1,0 +1,24 @@
+.documents-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:30px;
+}
+
+.documents-table th,
+.documents-table td{
+    padding:16px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.delete-btn{
+    background:#d63031;
+    color:white;
+    padding:8px 14px;
+    border-radius:8px;
+    text-decoration:none;
+    transition:.3s;
+}
+
+.delete-btn:hover{
+    background:#ff3b3b;
+}

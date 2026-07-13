@@ -1,0 +1,66 @@
+{% extends "dashboard_base.html" %} {% block title %}My Documents{% endblock %}
+{% block dashboard_content %}
+
+<div class="page-header">
+  <h1>📄 My Documents</h1>
+  <p>Manage all your uploaded documents.</p>
+</div>
+
+{% if documents %}
+
+<table class="documents-table">
+  <thead>
+    <tr>
+      <th>File Name</th>
+      <th>Category</th>
+      <th>Type</th>
+      <th>Size</th>
+      <th>Uploaded</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for doc in documents %}
+
+    <tr>
+      <td>{{ doc[2] }}</td>
+
+      <td>{{ doc[6] }}</td>
+
+      <td>{{ doc[4] }}</td>
+
+      <td>{{ (doc[5]/1024)|round(2) }} KB</td>
+
+      <td>{{ doc[7] }}</td>
+
+      <td>
+        <a href="/download-document/{{ doc[0] }}" class="btn-primary">
+          ⬇ Download
+        </a>
+
+        <a
+          href="/delete-document/{{ doc[0] }}"
+          class="delete-btn"
+          onclick="return confirm('Delete this document?');"
+        >
+          🗑 Delete
+        </a>
+      </td>
+    </tr>
+
+    {% endfor %}
+  </tbody>
+</table>
+
+{% else %}
+
+<div class="empty-state">
+  <h2>No Documents Found</h2>
+
+  <p>You haven't uploaded any documents yet.</p>
+
+  <a href="/upload" class="btn-primary"> Upload First Document </a>
+</div>
+
+{% endif %} {% endblock %}

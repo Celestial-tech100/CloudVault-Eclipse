@@ -1,6 +1,25 @@
 from flask import Flask, render_template
+from flask import session, redirect, request, flash
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import os
+from werkzeug.utils import secure_filename
+from flask import send_from_directory
 
 app = Flask(__name__)
+app.secret_key = "cloudvault_eclipse_2026"
+
+
+def init_db():
+    conn = sqlite3.connect("database/cloudvault.db")
+
+    with open("database/schema.sql", "r") as f:
+        conn.executescript(f.read())
+
+    conn.commit()
+    conn.close()
+init_db()
+
 
 @app.route("/")
 def home():
@@ -8,7 +27,243 @@ def home():
 
 @app.route("/dashboard")
 def dashboard():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
     return render_template("dashboard.html")
+
+import os
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = "static/uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+import time
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+
+        file = request.files["document"]
+        category = request.form["category"]
+
+        if file:
+
+            filename = secure_filename(file.filename)
+
+            stored_name = f"{int(time.time())}_{filename}"
+
+            file.save(
+                os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    stored_name
+                )
+            )
+
+            file.save(
+                os.path.join(
+                    app.config["UPLOAD_FOLDER"],
+                    filename
+                )
+            )
+
+            conn = sqlite3.connect("database/cloudvault.db")
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                INSERT INTO documents
+                (user_id,file_name,stored_name,file_type,file_size,category)
+                VALUES(?,?,?,?,?,?)
+                """,
+                (
+                    session["user_id"],
+                    filename,
+                    stored_name,
+                    file.content_type,
+                    os.path.getsize(
+                        os.path.join(
+                            app.config["UPLOAD_FOLDER"],
+                            stored_name
+                        )
+                    ),
+                    category
+                )
+            )
+
+            conn.commit()
+            conn.close()
+
+            return redirect("/documents")
+
+    return render_template("upload.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conn = sqlite3.connect("database/cloudvault.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT id,full_name,password FROM users WHERE email=?",
+            (email,)
+        )
+
+        user = cursor.fetchone()
+        conn.close()
+
+        if user and check_password_hash(user[2], password):
+
+            session["user_id"] = user[0]
+            session["user_name"] = user[1]
+
+            return redirect("/dashboard")
+
+    return render_template("login.html")
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+
+    if request.method == "POST":
+
+        full_name = request.form["full_name"]
+        email = request.form["email"]
+        password = generate_password_hash(request.form["password"])
+
+        conn = sqlite3.connect("database/cloudvault.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO users(full_name,email,password) VALUES(?,?,?)",
+            (full_name, email, password)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/login")
+
+    return render_template("register.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+@app.route("/documents")
+def documents():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM documents
+        WHERE user_id=?
+        ORDER BY upload_date DESC
+        """,
+        (session["user_id"],)
+    )
+
+    docs = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "documents.html",
+        documents=docs
+    )
+
+@app.route("/download-document/<int:id>")
+def download_document(id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT stored_name, file_name
+        FROM documents
+        WHERE id=? AND user_id=?
+        """,
+        (id, session["user_id"])
+    )
+
+    document = cursor.fetchone()
+
+    conn.close()
+
+    if not document:
+        flash("Document not found.", "error")
+        return redirect("/documents")
+
+    return send_from_directory(
+        app.config["UPLOAD_FOLDER"],
+        document[0],
+        as_attachment=True,
+        download_name=document[1]
+    )
+
+@app.route("/delete-document/<int:id>")
+def delete_document(id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT stored_name
+        FROM documents
+        WHERE id=? AND user_id=?
+        """,
+        (id, session["user_id"])
+    )
+
+    doc = cursor.fetchone()
+
+    if doc:
+
+        path = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            doc[0]
+        )
+
+        if os.path.exists(path):
+            os.remove(path)
+
+        cursor.execute(
+            """
+            DELETE FROM documents
+            WHERE id=?
+            """,
+            (id,)
+        )
+
+        conn.commit()
+
+    conn.close()
+
+    return redirect("/documents")
 
 if __name__ == "__main__":
     app.run(debug=True)
