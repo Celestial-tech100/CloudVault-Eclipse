@@ -46,7 +46,7 @@ block content %}
             <div class="progress-fill"></div>
           </div>
 
-          <span>62%</span>
+          <span>44%</span>
         </div>
 
         <div class="preview-files">
@@ -192,58 +192,108 @@ block content %}
     </div>
   </div>
 </section>
+
 <!-- ========================= ARCHITECTURE ========================== -->
 <section class="architecture">
   <div class="container">
+
     <div class="section-title">
       <h2>Cloud Architecture</h2>
       <p>
-        Built using a scalable cloud-native architecture for secure document
-        management.
+        CloudVault Eclipse is built with a secure Flask backend, role-based
+        access control, AWS S3 cloud storage, and SQLite database management.
       </p>
     </div>
 
-    <div class="architecture-grid">
-      <div class="architecture-card">
-        <span>👤</span>
-        <h3>User</h3>
+    <div class="architecture-wrapper">
+
+      <!-- USER MODULE -->
+      <div class="architecture-module">
+
+        <h3 class="module-title">👤 User Module</h3>
+
+        <div class="architecture-grid">
+
+          <div class="architecture-card">
+            <span>👤</span>
+            <h3>User</h3>
+          </div>
+
+          <div class="architecture-arrow">→</div>
+
+          <div class="architecture-card">
+            <span>🌐</span>
+            <h3>Flask App</h3>
+          </div>
+
+          <div class="architecture-arrow">→</div>
+
+          <div class="architecture-card">
+            <span>📂</span>
+            <h3>Documents</h3>
+          </div>
+
+          <div class="architecture-arrow">→</div>
+
+          <div class="architecture-card">
+            <span>☁️</span>
+            <h3>AWS S3</h3>
+          </div>
+
+        </div>
+
       </div>
 
-      <div class="architecture-arrow">→</div>
+      <!-- ADMIN MODULE -->
+      <div class="architecture-module">
 
-      <div class="architecture-card">
-        <span>🌐</span>
-        <h3>Flask App</h3>
+        <h3 class="module-title">👨‍💼 Admin Module</h3>
+
+        <div class="architecture-grid">
+
+          <div class="architecture-card">
+            <span>👨‍💼</span>
+            <h3>Admin</h3>
+          </div>
+
+          <div class="architecture-arrow">→</div>
+
+          <div class="architecture-card">
+            <span>🌐</span>
+            <h3>Flask App</h3>
+          </div>
+
+          <div class="architecture-arrow">→</div>
+
+          <div class="architecture-card">
+            <span>📊</span>
+            <h3>Dashboard</h3>
+          </div>
+
+          <div class="architecture-arrow">→</div>
+
+          <div class="architecture-card">
+            <span>🗄️</span>
+            <h3>SQLite</h3>
+          </div>
+
+        </div>
+
       </div>
 
-      <div class="architecture-arrow">→</div>
+      <!-- DEPLOYMENT -->
+      <div class="deployment-section">
 
-      <div class="architecture-card">
-        <span>🗄️</span>
-        <h3>SQLite</h3>
+        <div class="architecture-card deployment-card">
+          <span>🐳</span>
+          <h3>Docker</h3>
+          <p>Containerized Deployment</p>
+        </div>
+
       </div>
 
-      <div class="architecture-arrow">→</div>
-
-      <div class="architecture-card">
-        <span>☁️</span>
-        <h3>AWS S3</h3>
-      </div>
-
-      <div class="architecture-arrow">→</div>
-
-      <div class="architecture-card">
-        <span>🐳</span>
-        <h3>Docker</h3>
-      </div>
-
-      <div class="architecture-arrow">→</div>
-
-      <div class="architecture-card">
-        <span>☸️</span>
-        <h3>Kubernetes</h3>
-      </div>
     </div>
+
   </div>
 </section>
 <!-- ========================= CTA  ========================== -->

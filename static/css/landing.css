@@ -68,7 +68,7 @@
     margin:12px 0;
 }
 .progress-fill{
-    width:62%;
+    width:44%;
     height:100%;
     background:linear-gradient(90deg,var(--primary),var(--gold));
 }
@@ -248,6 +248,77 @@
 .architecture-arrow{
     font-size:28px;
     color:var(--primary);
+}
+.architecture-wrapper{
+    display:flex;
+    flex-direction:column;
+    gap:60px;
+}
+
+.architecture-module{
+    text-align:center;
+}
+
+.module-title{
+    color:#ffffff;
+    font-size:2rem;
+    margin-bottom:35px;
+}
+
+.architecture-grid{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.architecture-card{
+    width:170px;
+    min-height:170px;
+    background:#15151d;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:20px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    transition:.3s;
+}
+
+.architecture-card:hover{
+    transform:translateY(-8px);
+    border-color:#8b5cf6;
+}
+
+.architecture-card span{
+    font-size:3rem;
+    margin-bottom:15px;
+}
+
+.architecture-card h3{
+    color:#fff;
+    font-size:1.3rem;
+}
+
+.architecture-card p{
+    margin-top:8px;
+    color:#b6b6c8;
+}
+
+.architecture-arrow{
+    font-size:2rem;
+    color:#8b5cf6;
+    font-weight:bold;
+}
+
+.deployment-section{
+    display:flex;
+    justify-content:center;
+}
+
+.deployment-card{
+    width:230px;
 }
 /*============================== CTA ==============================*/
 
