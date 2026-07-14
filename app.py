@@ -2,19 +2,29 @@ import os
 import sqlite3
 import random
 from datetime import datetime, timedelta
-
 from flask import Flask, render_template
-from flask import session, redirect, request, flash
+from flask import session, redirect, request, flash , Response
 from flask import send_from_directory
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+import boto3
+from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "cloudvault_eclipse_2026"
+app.secret_key = os.getenv("SECRET_KEY")
+# AWS S3 Configuration
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION")
+)
 
+AWS_BUCKET = os.getenv("AWS_BUCKET_NAME")
 app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
 app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT"))
 app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS") == "True"
@@ -190,6 +200,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 import time
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
 
@@ -201,54 +212,56 @@ def upload():
         file = request.files["document"]
         category = request.form["category"]
 
-        if file:
+        if file and file.filename != "":
 
             filename = secure_filename(file.filename)
-
             stored_name = f"{int(time.time())}_{filename}"
 
-            file.save(
-                os.path.join(
-                    app.config["UPLOAD_FOLDER"],
-                    stored_name
-                )
-            )
+            # Get file size BEFORE uploading
+            file.seek(0, os.SEEK_END)
+            file_size = file.tell()
+            file.seek(0)
 
-            file.save(
-                os.path.join(
-                    app.config["UPLOAD_FOLDER"],
-                    filename
-                )
-            )
+            try:
 
-            conn = sqlite3.connect("database/cloudvault.db")
-            cursor = conn.cursor()
-
-            cursor.execute(
-                """
-                INSERT INTO documents
-                (user_id,file_name,stored_name,file_type,file_size,category)
-                VALUES(?,?,?,?,?,?)
-                """,
-                (
-                    session["user_id"],
-                    filename,
+                # Upload to AWS S3
+                s3.upload_fileobj(
+                    file,
+                    AWS_BUCKET,
                     stored_name,
-                    file.content_type,
-                    os.path.getsize(
-                        os.path.join(
-                            app.config["UPLOAD_FOLDER"],
-                            stored_name
-                        )
-                    ),
-                    category
+                    ExtraArgs={
+                        "ContentType": file.content_type
+                    }
                 )
-            )
 
-            conn.commit()
-            conn.close()
+                conn = sqlite3.connect("database/cloudvault.db")
+                cursor = conn.cursor()
 
-            return redirect("/documents")
+                cursor.execute(
+                    """
+                    INSERT INTO documents
+                    (user_id, file_name, stored_name, file_type, file_size, category)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        session["user_id"],
+                        filename,
+                        stored_name,
+                        file.content_type,
+                        file_size,
+                        category
+                    )
+                )
+
+                conn.commit()
+                conn.close()
+
+                flash("Document uploaded successfully.", "success")
+                return redirect("/documents")
+
+            except Exception as e:
+                print("UPLOAD ERROR:", e)   # <-- print to terminal
+                flash(f"Upload failed: {e}", "error")
 
     return render_template("upload.html")
 
@@ -472,12 +485,27 @@ def download_document(id):
         flash("Document not found.", "error")
         return redirect("/documents")
 
-    return send_from_directory(
-        app.config["UPLOAD_FOLDER"],
-        document[0],
-        as_attachment=True,
-        download_name=document[1]
-    )
+    stored_name = document[0]
+    original_name = document[1]
+
+    try:
+
+        file_obj = s3.get_object(
+            Bucket=AWS_BUCKET,
+            Key=stored_name
+        )
+
+        return Response(
+            file_obj["Body"].read(),
+            mimetype=file_obj["ContentType"],
+            headers={
+                "Content-Disposition": f'attachment; filename="{original_name}"'
+            }
+        )
+
+    except Exception as e:
+        flash(f"Download failed: {e}", "error")
+        return redirect("/documents")
 
 @app.route("/delete-document/<int:id>")
 def delete_document(id):
@@ -497,18 +525,24 @@ def delete_document(id):
         (id, session["user_id"])
     )
 
-    doc = cursor.fetchone()
+    document = cursor.fetchone()
 
-    if doc:
+    if not document:
+        conn.close()
+        flash("Document not found.", "error")
+        return redirect("/documents")
 
-        path = os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            doc[0]
+    stored_name = document[0]
+
+    try:
+
+        # Delete from AWS S3
+        s3.delete_object(
+            Bucket=AWS_BUCKET,
+            Key=stored_name
         )
 
-        if os.path.exists(path):
-            os.remove(path)
-
+        # Delete metadata from SQLite
         cursor.execute(
             """
             DELETE FROM documents
@@ -518,6 +552,12 @@ def delete_document(id):
         )
 
         conn.commit()
+
+        flash("Document deleted successfully.", "success")
+
+    except Exception as e:
+
+        flash(f"Delete failed: {e}", "error")
 
     conn.close()
 
