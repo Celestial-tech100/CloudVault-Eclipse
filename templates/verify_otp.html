@@ -5,7 +5,10 @@ content %}
   <div class="auth-card">
     <h2>Email Verification</h2>
 
-    <p>We have sent a 6-digit verification code to your email.</p>
+    <p>
+      We have sent a 6-digit verification code to
+      <strong>{{ masked_email }}</strong>.
+    </p>
 
     <form method="POST">
       <div class="form-group">

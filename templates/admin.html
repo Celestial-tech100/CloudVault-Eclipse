@@ -37,6 +37,7 @@
         <th>Name</th>
         <th>Email</th>
         <th>Role</th>
+        <th>Actions</th>
       </tr>
     </thead>
 
@@ -49,6 +50,24 @@
         <td>{{ user[2] }}</td>
 
         <td>{{ user[3] }}</td>
+
+        <td>
+          {% if user[0] != session["user_id"] %}
+
+          <a
+            href="/admin/delete-user/{{ user[0] }}"
+            onclick="return confirm('Delete this user?');"
+            class="delete-btn"
+          >
+            Delete
+          </a>
+
+          {% else %}
+
+          <strong>You</strong>
+
+          {% endif %}
+        </td>
       </tr>
 
       {% endfor %}

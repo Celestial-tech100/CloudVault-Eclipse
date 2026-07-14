@@ -279,6 +279,7 @@ def login():
 
             session["user_id"] = user[0]
             session["user_name"] = user[1]
+            session["user_email"] = email
             session["role"] = user[3]
 
             return redirect("/dashboard")
@@ -495,10 +496,21 @@ from datetime import datetime
 def verify_otp():
 
     if "pending_registration" not in session:
-        flash("Registration session expired.", "error")
+        flash("Registration session expired. Please register again.", "error")
         return redirect("/register")
 
     pending = session["pending_registration"]
+
+    # Mask email for display
+    email = pending["email"]
+    username, domain = email.split("@")
+
+    if len(username) > 2:
+        masked_email = username[:2] + "*" * (len(username) - 2)
+    else:
+        masked_email = username[0] + "*"
+
+    masked_email += "@" + domain
 
     if request.method == "POST":
 
@@ -523,8 +535,8 @@ def verify_otp():
 
         cursor.execute(
             """
-            INSERT INTO users(full_name,email,password)
-            VALUES(?,?,?)
+            INSERT INTO users(full_name, email, password)
+            VALUES (?, ?, ?)
             """,
             (
                 pending["full_name"],
@@ -545,7 +557,10 @@ def verify_otp():
 
         return redirect("/login")
 
-    return render_template("verify_otp.html")
+    return render_template(
+        "verify_otp.html",
+        masked_email=masked_email
+    )
 
 @app.route("/resend-otp")
 def resend_otp():
@@ -595,6 +610,139 @@ CloudVault Eclipse
         flash(f"Unable to resend OTP: {e}", "error")
 
     return redirect("/verify-otp")
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+
+        name = request.form["name"]
+        email = request.form["email"]
+        subject = request.form["subject"]
+        message = request.form["message"]
+
+        try:
+
+            msg = Message(
+                subject=f"CloudVault Contact - {subject}",
+                sender=app.config["MAIL_USERNAME"],
+                recipients=[app.config["MAIL_USERNAME"]]
+            )
+
+            msg.body = f"""
+CloudVault Eclipse Contact Form
+
+Name: {name}
+Email: {email}
+
+Subject:
+{subject}
+
+Message:
+{message}
+"""
+
+            mail.send(msg)
+
+            flash("Your message has been sent successfully!", "success")
+
+            return redirect("/contact")
+
+        except Exception as e:
+
+            flash(f"Unable to send message: {e}", "error")
+
+            return redirect("/contact")
+
+    return render_template("contact.html")
+
+@app.route("/admin/delete-user/<int:user_id>")
+def admin_delete_user(user_id):
+
+    # User must be logged in
+    if "user_id" not in session:
+        return redirect("/login")
+
+    # Must be an admin
+    if session.get("role") != "admin":
+        flash("Access denied.", "error")
+        return redirect("/dashboard")
+
+    # Prevent deleting yourself
+    if user_id == session["user_id"]:
+        flash("You cannot delete your own account.", "error")
+        return redirect("/admin")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    # Check if user exists
+    cursor.execute(
+        """
+        SELECT id
+        FROM users
+        WHERE id=?
+        """,
+        (user_id,)
+    )
+
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        flash("User not found.", "error")
+        return redirect("/admin")
+
+    # Get all uploaded files
+    cursor.execute(
+        """
+        SELECT stored_name
+        FROM documents
+        WHERE user_id=?
+        """,
+        (user_id,)
+    )
+
+    documents = cursor.fetchall()
+
+    # Delete physical files
+    for document in documents:
+
+        file_path = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            document[0]
+        )
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    # Delete document records
+    cursor.execute(
+        """
+        DELETE FROM documents
+        WHERE user_id=?
+        """,
+        (user_id,)
+    )
+
+    # Delete user
+    cursor.execute(
+        """
+        DELETE FROM users
+        WHERE id=?
+        """,
+        (user_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    flash("User deleted successfully.", "success")
+
+    return redirect("/admin")
 
 if __name__ == "__main__":
     app.run(debug=True) 
