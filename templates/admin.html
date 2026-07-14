@@ -28,6 +28,10 @@
   </div>
 </div>
 
+<div style="margin: 20px 0">
+  <a href="/admin/documents" class="btn-primary"> 📂 View All Documents </a>
+</div>
+
 <div class="recent-card">
   <h2>Registered Users</h2>
 
@@ -51,13 +55,31 @@
 
         <td>{{ user[3] }}</td>
 
-        <td>
-          {% if user[0] != session["user_id"] %}
+        <td class="action-buttons">
+          {% if user[0] != session["user_id"] %} {% if user[3] == "user" %}
+
+          <a
+            href="/admin/change-role/{{ user[0] }}"
+            class="action-btn admin-btn"
+          >
+            Make Admin
+          </a>
+
+          {% else %}
+
+          <a
+            href="/admin/change-role/{{ user[0] }}"
+            class="action-btn warning-btn"
+          >
+            Remove Admin
+          </a>
+
+          {% endif %}
 
           <a
             href="/admin/delete-user/{{ user[0] }}"
+            class="action-btn delete-btn"
             onclick="return confirm('Delete this user?');"
-            class="delete-btn"
           >
             Delete
           </a>

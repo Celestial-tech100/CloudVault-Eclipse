@@ -392,25 +392,58 @@ def documents():
     if "user_id" not in session:
         return redirect("/login")
 
+    search = request.args.get("search", "").strip()
+    category = request.args.get("category", "").strip()
+
     conn = sqlite3.connect("database/cloudvault.db")
     cursor = conn.cursor()
 
+    # Base query
+    query = """
+        SELECT *
+        FROM documents
+        WHERE user_id=?
+    """
+
+    params = [session["user_id"]]
+
+    # Search by filename
+    if search:
+        query += " AND file_name LIKE ?"
+        params.append(f"%{search}%")
+
+    # Filter by category
+    if category and category != "All":
+        query += " AND category=?"
+        params.append(category)
+
+    # Latest uploads first
+    query += " ORDER BY upload_date DESC"
+
+    cursor.execute(query, tuple(params))
+    docs = cursor.fetchall()
+
+    # Fetch unique categories for dropdown
     cursor.execute(
         """
-        SELECT * FROM documents
+        SELECT DISTINCT category
+        FROM documents
         WHERE user_id=?
-        ORDER BY upload_date DESC
+        ORDER BY category
         """,
         (session["user_id"],)
     )
 
-    docs = cursor.fetchall()
+    categories = [row[0] for row in cursor.fetchall()]
 
     conn.close()
 
     return render_template(
         "documents.html",
-        documents=docs
+        documents=docs,
+        categories=categories,
+        search=search,
+        selected_category=category
     )
 
 @app.route("/download-document/<int:id>")
@@ -659,6 +692,54 @@ Message:
 
     return render_template("contact.html")
 
+@app.route("/change_password", methods=["GET", "POST"])
+def change_password():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+
+        current_password = request.form["current_password"]
+        new_password = request.form["new_password"]
+        confirm_password = request.form["confirm_password"]
+
+        conn = sqlite3.connect("database/cloudvault.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT password FROM users WHERE id=?",
+            (session["user_id"],)
+        )
+
+        user = cursor.fetchone()
+
+        if not check_password_hash(user[0], current_password):
+            flash("Current password is incorrect.", "error")
+            conn.close()
+            return redirect("/change-password")
+
+        if new_password != confirm_password:
+            flash("Passwords do not match.", "error")
+            conn.close()
+            return redirect("/change-password")
+
+        hashed_password = generate_password_hash(new_password)
+
+        cursor.execute(
+            "UPDATE users SET password=? WHERE id=?",
+            (hashed_password, session["user_id"])
+        )
+
+        conn.commit()
+        conn.close()
+
+        flash("Password changed successfully.", "success")
+
+        return redirect("/profile")
+
+    return render_template("change_password.html")
+
 @app.route("/admin/delete-user/<int:user_id>")
 def admin_delete_user(user_id):
 
@@ -743,6 +824,168 @@ def admin_delete_user(user_id):
     flash("User deleted successfully.", "success")
 
     return redirect("/admin")
+
+@app.route("/admin/change-role/<int:user_id>")
+def change_user_role(user_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "error")
+        return redirect("/dashboard")
+
+    if user_id == session["user_id"]:
+        flash("You cannot change your own role.", "error")
+        return redirect("/admin")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT role
+        FROM users
+        WHERE id=?
+    """, (user_id,))
+
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        flash("User not found.", "error")
+        return redirect("/admin")
+
+    new_role = "admin" if user[0] == "user" else "user"
+
+    cursor.execute("""
+        UPDATE users
+        SET role=?
+        WHERE id=?
+    """, (new_role, user_id))
+
+    conn.commit()
+    conn.close()
+
+    flash(f"User role changed to {new_role.title()}.", "success")
+
+    return redirect("/admin")
+
+@app.route("/admin/documents")
+def admin_documents():
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "error")
+        return redirect("/dashboard")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            documents.id,
+            users.full_name,
+            documents.file_name,
+            documents.category,
+            documents.file_type,
+            documents.file_size,
+            documents.upload_date
+        FROM documents
+        JOIN users
+        ON documents.user_id = users.id
+        ORDER BY documents.upload_date DESC
+    """)
+
+    documents = cursor.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "admin_documents.html",
+        documents=documents
+    )
+
+@app.route("/admin/download-document/<int:document_id>")
+def admin_download_document(document_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "error")
+        return redirect("/dashboard")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT stored_name, file_name
+        FROM documents
+        WHERE id=?
+    """, (document_id,))
+
+    document = cursor.fetchone()
+
+    conn.close()
+
+    if not document:
+        flash("Document not found.", "error")
+        return redirect("/admin/documents")
+
+    return send_from_directory(
+        app.config["UPLOAD_FOLDER"],
+        document[0],
+        as_attachment=True,
+        download_name=document[1]
+    )
+
+@app.route("/admin/delete-document/<int:document_id>")
+def admin_delete_document(document_id):
+
+    if "user_id" not in session:
+        return redirect("/login")
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "error")
+        return redirect("/dashboard")
+
+    conn = sqlite3.connect("database/cloudvault.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT stored_name
+        FROM documents
+        WHERE id=?
+    """, (document_id,))
+
+    document = cursor.fetchone()
+
+    if not document:
+        conn.close()
+        flash("Document not found.", "error")
+        return redirect("/admin/documents")
+
+    file_path = os.path.join(
+        app.config["UPLOAD_FOLDER"],
+        document[0]
+    )
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    cursor.execute("""
+        DELETE FROM documents
+        WHERE id=?
+    """, (document_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash("Document deleted successfully.", "success")
+
+    return redirect("/admin/documents")
 
 if __name__ == "__main__":
     app.run(debug=True) 

@@ -1,0 +1,62 @@
+{% extends "dashboard_base.html" %} {% block title %}All Documents{% endblock %}
+{% block dashboard_content %}
+
+<div class="dashboard-header">
+  <h1>📂 All Documents</h1>
+  <p>View every uploaded document.</p>
+</div>
+
+<div class="recent-card">
+  <table class="documents-table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>File</th>
+        <th>Category</th>
+        <th>Type</th>
+        <th>Size</th>
+        <th>Uploaded</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for doc in documents %}
+
+      <tr>
+        <td>{{ doc[1] }}</td>
+
+        <td>{{ doc[2] }}</td>
+
+        <td>{{ doc[3] }}</td>
+
+        <td>{{ doc[4] }}</td>
+
+        <td>{{ (doc[5]/1024)|round(2) }} KB</td>
+
+        <td>{{ doc[6] }}</td>
+
+        <td>
+          <a
+            href="/admin/download-document/{{ doc[0] }}"
+            class="action-btn admin-btn"
+          >
+            Download
+          </a>
+
+          <a
+            href="/admin/delete-document/{{ doc[0] }}"
+            class="action-btn delete-btn"
+            onclick="return confirm('Delete this document?');"
+          >
+            Delete
+          </a>
+        </td>
+      </tr>
+
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

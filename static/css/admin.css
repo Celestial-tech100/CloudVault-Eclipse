@@ -1,0 +1,52 @@
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.action-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.admin-btn {
+    background: #7c3aed;
+}
+
+.admin-btn:hover {
+    background: #6d28d9;
+}
+
+.warning-btn {
+    background: #f59e0b;
+}
+
+.warning-btn:hover {
+    background: #d97706;
+}
+
+.delete-btn {
+    background: #dc2626;
+}
+
+.delete-btn:hover {
+    background: #b91c1c;
+}

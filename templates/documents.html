@@ -1,66 +1,138 @@
-{% extends "dashboard_base.html" %} {% block title %}My Documents{% endblock %}
+{% extends "dashboard_base.html" %}
+
+{% block title %}My Documents{% endblock %}
+
 {% block dashboard_content %}
 
 <div class="page-header">
-  <h1>📄 My Documents</h1>
-  <p>Manage all your uploaded documents.</p>
+    <h1>📄 My Documents</h1>
+    <p>Manage all your uploaded documents.</p>
+</div>
+
+<div class="search-card">
+
+    <form method="GET" action="/documents">
+
+        <input
+            type="text"
+            name="search"
+            placeholder="Search by filename..."
+            value="{{ search }}"
+        >
+
+        <select name="category">
+
+            <option value="All">All Categories</option>
+
+            {% for cat in categories %}
+
+            <option value="{{ cat }}"
+                {% if selected_category == cat %}selected{% endif %}>
+                {{ cat }}
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <button type="submit" class="btn-primary">
+            🔍 Search
+        </button>
+
+        <a href="/documents" class="btn-secondary">
+            Reset
+        </a>
+
+    </form>
+
 </div>
 
 {% if documents %}
 
 <table class="documents-table">
-  <thead>
-    <tr>
-      <th>File Name</th>
-      <th>Category</th>
-      <th>Type</th>
-      <th>Size</th>
-      <th>Uploaded</th>
-      <th>Action</th>
-    </tr>
-  </thead>
 
-  <tbody>
-    {% for doc in documents %}
+    <thead>
 
-    <tr>
-      <td>{{ doc[2] }}</td>
+        <tr>
+            <th>File Name</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Uploaded</th>
+            <th>Actions</th>
+        </tr>
 
-      <td>{{ doc[6] }}</td>
+    </thead>
 
-      <td>{{ doc[4] }}</td>
+    <tbody>
 
-      <td>{{ (doc[5]/1024)|round(2) }} KB</td>
+        {% for doc in documents %}
 
-      <td>{{ doc[7] }}</td>
+        <tr>
 
-      <td>
-        <a href="/download-document/{{ doc[0] }}" class="btn-primary">
-          ⬇ Download
-        </a>
+            <td>{{ doc[2] }}</td>
 
-        <a
-          href="/delete-document/{{ doc[0] }}"
-          class="delete-btn"
-          onclick="return confirm('Delete this document?');"
-        >
-          🗑 Delete
-        </a>
-      </td>
-    </tr>
+            <td>{{ doc[6] }}</td>
 
-    {% endfor %}
-  </tbody>
+            <td>{{ doc[4] }}</td>
+
+            <td>{{ (doc[5] / 1024)|round(2) }} KB</td>
+
+            <td>{{ doc[7] }}</td>
+
+            <td class="action-buttons">
+
+                <a
+                    href="/download-document/{{ doc[0] }}"
+                    class="action-btn admin-btn">
+                    ⬇ Download
+                </a>
+
+                <a
+                    href="/delete-document/{{ doc[0] }}"
+                    class="action-btn delete-btn"
+                    onclick="return confirm('Delete this document?');">
+                    🗑 Delete
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
 </table>
 
 {% else %}
 
 <div class="empty-state">
-  <h2>No Documents Found</h2>
 
-  <p>You haven't uploaded any documents yet.</p>
+    {% if search or selected_category %}
 
-  <a href="/upload" class="btn-primary"> Upload First Document </a>
+        <h2>No Matching Documents</h2>
+
+        <p>No documents matched your search.</p>
+
+        <a href="/documents" class="btn-primary">
+            View All Documents
+        </a>
+
+    {% else %}
+
+        <h2>No Documents Yet</h2>
+
+        <p>You haven't uploaded any documents yet.</p>
+
+        <a href="/upload" class="btn-primary">
+            Upload First Document
+        </a>
+
+    {% endif %}
+
 </div>
 
-{% endif %} {% endblock %}
+{% endif %}
+
+{% endblock %}

@@ -1,39 +1,31 @@
-{% extends "base.html" %} {% block title %}My Profile{% endblock %} {% block
-content %}
+{% extends "dashboard_base.html" %} {% block title %}My Profile{% endblock %} {%
+block dashboard_content %}
 
-<section class="dashboard-page">
-  <div class="page-header">
-    <h2>My Profile</h2>
-    <p>Manage your CloudVault Eclipse account.</p>
+<div class="profile-container">
+  <div class="profile-card">
+    <div class="profile-header">
+      <h2>👤 My Profile</h2>
+      <p>Manage your CloudVault Eclipse account.</p>
+    </div>
+
+    <div class="profile-info">
+      <strong>Name</strong>
+      <span>{{ user[1] }}</span>
+
+      <strong>Email</strong>
+      <span>{{ user[2] }}</span>
+
+      <strong>Role</strong>
+      <span>{{ user[3] }}</span>
+
+      <strong>Member Since</strong>
+      <span>{{ user[4] }}</span>
+    </div>
+
+    <div class="profile-actions">
+      <a href="/change_password" class="btn-primary"> 🔒 Change Password </a>
+    </div>
   </div>
-
-  <div class="dashboard-card" style="max-width: 650px">
-    <table class="profile-table">
-      <tr>
-        <th>Full Name</th>
-        <td>{{ user[0] }}</td>
-      </tr>
-
-      <tr>
-        <th>Email</th>
-        <td>{{ user[1] }}</td>
-      </tr>
-
-      <tr>
-        <th>Role</th>
-        <td>{{ user[2]|capitalize }}</td>
-      </tr>
-
-      <tr>
-        <th>Member Since</th>
-        <td>{{ user[3] }}</td>
-      </tr>
-    </table>
-
-    <br />
-
-    <a href="/change-password" class="btn-primary"> Change Password </a>
-  </div>
-</section>
+</div>
 
 {% endblock %}
