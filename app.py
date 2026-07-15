@@ -385,7 +385,7 @@ def profile():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT full_name, email, role, created_at
+        SELECT id, full_name, email, role, created_at
         FROM users
         WHERE id=?
     """, (session["user_id"],))

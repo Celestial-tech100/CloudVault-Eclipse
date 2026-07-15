@@ -9,6 +9,9 @@ block dashboard_content %}
     </div>
 
     <div class="profile-info">
+      <strong>User ID</strong>
+      <span>CVE{{ "%06d"|format(user[0]) }}</span>
+
       <strong>Name</strong>
       <span>{{ user[1] }}</span>
 
@@ -16,10 +19,12 @@ block dashboard_content %}
       <span>{{ user[2] }}</span>
 
       <strong>Role</strong>
-      <span>{{ user[3] }}</span>
+      <span>
+        {% if user[3] == "admin" %} Administrator {% else %} User {% endif %}
+      </span>
 
       <strong>Member Since</strong>
-      <span>{{ user[4] }}</span>
+      <span>{{ user[4][:10] }}</span>
     </div>
 
     <div class="profile-actions">
